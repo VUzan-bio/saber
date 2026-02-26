@@ -8,6 +8,10 @@ targeting drug-resistance mutations in *Mycobacterium tuberculosis*.
 SABER automates the full crRNA design workflow for multiplexed electrochemical
 CRISPR-Cas12a diagnostics:
 
+<img width="2784" height="1536" alt="Gemini_Generated_Image_lc2mx3lc2mx3lc2m" src="https://github.com/user-attachments/assets/f9f58d2f-75c0-4f4a-af77-cc7264a0a995" />
+
+
+
 1. **Target Definition** — Resolve genomic coordinates for WHO-catalogued resistance mutations
 2. **Candidate Generation** — Scan for PAM-proximal spacers with mutation in seed region
 3. **Off-Target Screening** — Align candidates against reference genomes
@@ -15,8 +19,6 @@ CRISPR-Cas12a diagnostics:
 5. **Multiplex Optimization** — Select optimal N-plex panel under cross-reactivity constraints
 6. **RPA Primer Co-Design** — Design amplification primers jointly with crRNA selection
 7. **Experimental Tracking** — Log wet-lab results, close the active learning loop
-
-<img width="2784" height="1536" alt="Gemini_Generated_Image_lc2mx3lc2mx3lc2m" src="https://github.com/user-attachments/assets/f9f58d2f-75c0-4f4a-af77-cc7264a0a995" />
 
 ## Installation
 
