@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=68.0", "setuptools-scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "saber"
+version = "0.1.0"
+description = "Systematic Automated Biosensor Engineering for Resistance"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [{name = "Valentin Uzan", email = "valentin.uzan@holocyte.com"}]
+
+dependencies = [
+    "biopython>=1.83",
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "pydantic>=2.6",
+    "pyyaml>=6.0",
+    "scipy>=1.12",
+]
+
+[project.optional-dependencies]
+ml = [
+    "torch>=2.2",
+    "scikit-learn>=1.4",
+]
+structure = [
+    "ViennaRNA>=2.6",       # RNA secondary structure
+]
+alignment = [
+    # bowtie2 installed via system package manager
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=4.1",
+    "ruff>=0.3",
+    "mypy>=1.8",
+    "pre-commit>=3.6",
+]
+
+[project.scripts]
+saber = "saber.pipeline.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["saber*"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "ANN", "B", "SIM"]
+ignore = ["ANN101", "ANN102"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"

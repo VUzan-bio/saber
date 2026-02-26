@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Data (large files — use git-lfs or DVC)
+data/references/*.fasta
+data/references/*.fasta.fai
+data/references/*.bt2
+data/references/*.gff3
+*.h5
+*.pt
+*.pth
+
+# Results
+results/
+checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/

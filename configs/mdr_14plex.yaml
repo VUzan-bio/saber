@@ -1,0 +1,40 @@
+# SABER configuration — MDR-TB 14-plex diagnostic panel
+# Targets: 19 key resistance markers across 14 loci covering >95% clinical resistance
+
+name: mdr_14plex
+output_dir: results/mdr_14plex
+
+reference:
+  genome_fasta: data/references/H37Rv.fasta
+  genome_index: data/references/H37Rv                # Bowtie2 index prefix
+  human_index: data/references/GRCh38                 # optional, for blood-based specificity
+  gff_annotation: data/references/H37Rv.gff3
+
+candidates:
+  spacer_lengths: [20, 21, 23]
+  use_enascas12a: true            # scan relaxed PAMs as fallback
+  require_seed_mutation: true      # mutation must be in positions 1-8
+  gc_min: 0.40
+  gc_max: 0.60
+  homopolymer_max: 4
+  mfe_threshold: -2.0             # kcal/mol
+
+scoring:
+  use_heuristic: true
+  use_ml: false                    # set true once JEPA checkpoint is available
+  ml_model_path: null
+  ml_model_name: heuristic
+
+multiplex:
+  max_plex: 14
+  optimizer: simulated_annealing
+  max_iterations: 10000
+  cross_reactivity_threshold: 0.3
+
+primers:
+  primer_length_min: 30
+  primer_length_max: 35
+  tm_min: 60.0
+  tm_max: 65.0
+  amplicon_min: 100
+  amplicon_max: 200
