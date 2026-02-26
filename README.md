@@ -16,6 +16,8 @@ CRISPR-Cas12a diagnostics:
 6. **RPA Primer Co-Design** — Design amplification primers jointly with crRNA selection
 7. **Experimental Tracking** — Log wet-lab results, close the active learning loop
 
+<img width="2784" height="1536" alt="Gemini_Generated_Image_lc2mx3lc2mx3lc2m" src="https://github.com/user-attachments/assets/f9f58d2f-75c0-4f4a-af77-cc7264a0a995" />
+
 ## Installation
 
 ```bash
