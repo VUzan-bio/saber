@@ -16,6 +16,8 @@ venv/
 *.swp
 
 # Data (large files — use git-lfs or DVC)
+*.fasta
+*.gz
 data/references/*.fasta
 data/references/*.fasta.fai
 data/references/*.bt2

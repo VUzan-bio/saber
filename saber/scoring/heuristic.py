@@ -6,6 +6,13 @@ empirical rules from Cas12a guide design literature.
 Each sub-score is normalised to [0, 1] where 1 = optimal.
 The composite score is a weighted sum.
 
+Proximity-aware: for PROXIMITY candidates (PAM desert fallback),
+the seed_position_score is replaced by a proximity_bonus that
+rewards crRNAs closer to the mutation site. This is because
+proximity candidates have no mutation inside the spacer — their
+discrimination comes from allele-specific RPA primers, not from
+crRNA mismatch position.
+
 This is the baseline that works immediately without any training data.
 """
 
@@ -23,6 +30,7 @@ from saber.core.constants import (
 )
 from saber.core.types import (
     CrRNACandidate,
+    DetectionStrategy,
     HeuristicScore,
     OffTargetReport,
     ScoredCandidate,
@@ -33,10 +41,19 @@ from saber.scoring.base import Scorer
 class HeuristicScorer(Scorer):
     """Rule-based crRNA scoring.
 
+    Handles both DIRECT and PROXIMITY candidates:
+    - DIRECT: seed_position_score based on mutation position in spacer
+    - PROXIMITY: seed_position_score = 0, proximity_bonus based on
+      distance to mutation (closer = higher bonus)
+
     Usage:
         scorer = HeuristicScorer()
         scored = scorer.score_batch(candidates, offtargets)
     """
+
+    # Maximum proximity distance (bp) that gets any bonus.
+    # Beyond this, proximity_bonus = 0.
+    MAX_PROXIMITY_BONUS_DISTANCE: int = 100
 
     def __init__(self, weights: dict[str, float] | None = None) -> None:
         self.weights = weights or HEURISTIC_WEIGHTS
@@ -52,6 +69,14 @@ class HeuristicScorer(Scorer):
         homo_penalty = self._score_homopolymer(candidate.homopolymer_max)
         ot_penalty = self._score_offtarget(offtarget)
 
+        # Proximity bonus for PROXIMITY candidates
+        prox_bonus = 0.0
+        is_proximity = getattr(candidate, "detection_strategy", None) == DetectionStrategy.PROXIMITY
+        if is_proximity:
+            prox_bonus = self._score_proximity_distance(
+                getattr(candidate, "proximity_distance", 100)
+            )
+
         composite = (
             self.weights["seed_position"] * seed_score
             + self.weights["gc"] * gc_penalty
@@ -60,6 +85,12 @@ class HeuristicScorer(Scorer):
             + self.weights["offtarget"] * ot_penalty
         )
 
+        # For proximity candidates, replace seed contribution with proximity bonus
+        # since seed_score is 0 (no mutation in spacer), this effectively adds
+        # the proximity signal into the composite
+        if is_proximity:
+            composite += self.weights["seed_position"] * prox_bonus
+
         heuristic = HeuristicScore(
             seed_position_score=seed_score,
             gc_penalty=gc_penalty,
@@ -67,6 +98,7 @@ class HeuristicScorer(Scorer):
             homopolymer_penalty=homo_penalty,
             offtarget_penalty=ot_penalty,
             composite=composite,
+            proximity_bonus=prox_bonus,
         )
 
         return ScoredCandidate(
@@ -80,8 +112,15 @@ class HeuristicScorer(Scorer):
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _score_seed_position(pos: int) -> float:
-        """Closer to PAM = better discrimination. Linear decay from pos 1-8."""
+    def _score_seed_position(pos: int | None) -> float:
+        """Closer to PAM = better discrimination. Linear decay from pos 1-8.
+
+        Returns 0.0 for proximity candidates (pos=None) since the mutation
+        is outside the spacer. Their score contribution comes from
+        proximity_bonus instead.
+        """
+        if pos is None:
+            return 0.0
         if pos > SEED_REGION_END:
             return 0.0
         return 1.0 - (pos - 1) / SEED_REGION_END
@@ -121,3 +160,21 @@ class HeuristicScorer(Scorer):
         if n == 0:
             return 1.0
         return math.exp(-0.5 * n)
+
+    @classmethod
+    def _score_proximity_distance(cls, distance: int) -> float:
+        """Score for proximity candidates based on distance to mutation.
+
+        Closer to mutation = higher score (better for AS-RPA design).
+        Linear decay from 1.0 at distance=0 to 0.0 at MAX_PROXIMITY_BONUS_DISTANCE.
+
+        Distance 0 means spacer edge is adjacent to mutation → score 1.0
+        Distance 13 bp (typical nearest in PAM desert) → score ~0.87
+        Distance 50 bp → score 0.5
+        Distance 100+ bp → score 0.0
+        """
+        if distance <= 0:
+            return 1.0
+        if distance >= cls.MAX_PROXIMITY_BONUS_DISTANCE:
+            return 0.0
+        return 1.0 - (distance / cls.MAX_PROXIMITY_BONUS_DISTANCE)
